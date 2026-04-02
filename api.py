@@ -9,7 +9,7 @@ from typing import Any, Dict, List, Optional
 
 import httpx
 from dotenv import load_dotenv
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Response
 from pydantic import BaseModel, Field
 
 from agents import AgentManager, ManagedAgent
@@ -70,6 +70,20 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(title="AgentLaunchHer API", version="0.1.0", lifespan=lifespan)
+
+
+@app.get("/")
+async def root():
+    return {
+        "service": "agentlaunchher-api",
+        "status": "online",
+        "message": "AgentLaunchHer API is running",
+    }
+
+
+@app.get("/favicon.ico")
+async def favicon():
+    return Response(status_code=204)
 
 
 @app.get("/health")
