@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 import sqlite3
 from dataclasses import dataclass
 from datetime import datetime, timezone
@@ -8,7 +9,17 @@ from typing import Optional
 
 from verifier import expiry_utc, generate_code, verify_code_in_text
 
-DB_PATH = Path("data/registry.db")
+
+def _default_db_path() -> Path:
+    env_path = os.getenv("REGISTRY_DB_PATH")
+    if env_path:
+        return Path(env_path)
+    if os.getenv("VERCEL"):
+        return Path("/tmp/registry.db")
+    return Path("data/registry.db")
+
+
+DB_PATH = _default_db_path()
 
 
 @dataclass
