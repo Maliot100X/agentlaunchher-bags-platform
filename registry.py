@@ -10,13 +10,13 @@ from typing import Optional
 from verifier import expiry_utc, generate_code, verify_code_in_text
 
 
-def _default_db_path() -> Path:
+def _default_db_path() -> str:
     env_path = os.getenv("REGISTRY_DB_PATH")
     if env_path:
-        return Path(env_path)
+        return env_path
     if os.getenv("VERCEL"):
-        return Path("/tmp/registry.db")
-    return Path("data/registry.db")
+        return ":memory:"
+    return "data/registry.db"
 
 
 DB_PATH = _default_db_path()
@@ -32,12 +32,12 @@ class PendingVerification:
 class RegistryStore:
     def __init__(self) -> None:
         db_path = DB_PATH
-        try:
-            db_path.parent.mkdir(parents=True, exist_ok=True)
-        except OSError:
-            # Serverless platforms may mount project root as read-only.
-            db_path = Path("/tmp/registry.db")
-            db_path.parent.mkdir(parents=True, exist_ok=True)
+        if db_path != ":memory:":
+            try:
+                Path(db_path).parent.mkdir(parents=True, exist_ok=True)
+            except OSError:
+                # Read-only filesystem fallback for serverless environments.
+                db_path = ":memory:"
         self.conn = sqlite3.connect(db_path)
         self.conn.row_factory = sqlite3.Row
         self._migrate()
