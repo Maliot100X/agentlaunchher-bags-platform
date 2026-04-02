@@ -39,3 +39,32 @@ class BagsClient:
         if isinstance(data, dict) and data.get("success"):
             return data.get("response", [])
         return []
+
+    async def agent_auth_init(self, agent_username: str) -> Dict[str, Any]:
+        resp = await self._http.post("/agent/auth/init", json={"agentUsername": agent_username})
+        resp.raise_for_status()
+        return resp.json()
+
+    async def agent_auth_complete(self, payload: Dict[str, Any]) -> Dict[str, Any]:
+        resp = await self._http.post("/agent/auth/complete", json=payload)
+        resp.raise_for_status()
+        return resp.json()
+
+    async def trade_quote(
+        self,
+        input_mint: str,
+        output_mint: str,
+        in_amount: str,
+        slippage_bps: int = 100,
+    ) -> Dict[str, Any]:
+        resp = await self._http.get(
+            "/trade/quote",
+            params={
+                "inputMint": input_mint,
+                "outputMint": output_mint,
+                "inAmount": in_amount,
+                "slippageBps": slippage_bps,
+            },
+        )
+        resp.raise_for_status()
+        return resp.json()

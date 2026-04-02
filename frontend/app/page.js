@@ -50,6 +50,9 @@ export default function HomePage() {
     skills_csv: 'market_scanner',
   });
   const [agentActionId, setAgentActionId] = useState('');
+  const [bagsAuth, setBagsAuth] = useState({ agent_username: '', complete_payload: '{}' });
+  const [bagsAuthInitOut, setBagsAuthInitOut] = useState(null);
+  const [bagsAuthCompleteOut, setBagsAuthCompleteOut] = useState(null);
 
   const [launchForm, setLaunchForm] = useState({
     name: 'AgentLaunchHer',
@@ -66,6 +69,8 @@ export default function HomePage() {
 
   const [askInput, setAskInput] = useState('Give me a Bags launch readiness check.');
   const [askOutput, setAskOutput] = useState(null);
+  const [quoteForm, setQuoteForm] = useState({ input_mint: '', output_mint: '', in_amount: '1000000', slippage_bps: 100 });
+  const [quoteOut, setQuoteOut] = useState(null);
 
   async function api(path, options) {
     const url = `${apiBase}${path}`;
@@ -264,6 +269,49 @@ export default function HomePage() {
     }
   }
 
+  async function runBagsAuthInit() {
+    try {
+      const out = await api('/bags/agent/auth/init', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ agent_username: bagsAuth.agent_username }),
+      });
+      setBagsAuthInitOut(out);
+      setNotice('Bags auth init completed.');
+    } catch (err) {
+      setNotice(err.message);
+    }
+  }
+
+  async function runBagsAuthComplete() {
+    try {
+      const parsed = JSON.parse(bagsAuth.complete_payload || '{}');
+      const out = await api('/bags/agent/auth/complete', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ payload: parsed }),
+      });
+      setBagsAuthCompleteOut(out);
+      setNotice('Bags auth complete executed.');
+    } catch (err) {
+      setNotice(err.message);
+    }
+  }
+
+  async function runQuote() {
+    try {
+      const out = await api('/bags/trade/quote', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify(quoteForm),
+      });
+      setQuoteOut(out);
+      setNotice('Trade quote received.');
+    } catch (err) {
+      setNotice(err.message);
+    }
+  }
+
   const signalRows = (scan?.coins || []).slice(0, 24);
 
   function renderTab() {
@@ -358,6 +406,27 @@ export default function HomePage() {
               <button onClick={() => startStop('stop')}>Stop</button>
             </div>
           </Card>
+
+          <Card title="Bags Agent Auth (Direct)" wide>
+            <div className="list">
+              <input value={bagsAuth.agent_username} onChange={(e) => setBagsAuth({ ...bagsAuth, agent_username: e.target.value })} placeholder="agent username" className="single" />
+              <div className="inlineButtons">
+                <button onClick={runBagsAuthInit}>Auth Init</button>
+              </div>
+              <pre>{pretty(bagsAuthInitOut || {})}</pre>
+              <textarea
+                value={bagsAuth.complete_payload}
+                onChange={(e) => setBagsAuth({ ...bagsAuth, complete_payload: e.target.value })}
+                className="single"
+                rows={6}
+                placeholder='{\"publicIdentifier\":\"...\",\"secret\":\"...\",\"postId\":\"...\"}'
+              />
+              <div className="inlineButtons">
+                <button onClick={runBagsAuthComplete}>Auth Complete</button>
+              </div>
+              <pre>{pretty(bagsAuthCompleteOut || {})}</pre>
+            </div>
+          </Card>
         </section>
       );
     }
@@ -413,6 +482,16 @@ export default function HomePage() {
           </Card>
           <Card title="Feed Stats">
             <pre>{pretty({ tokens_count: scan?.tokens_count || 0, pools_count: scan?.pools_count || 0 })}</pre>
+          </Card>
+          <Card title="Trade Quote (Bags API)" wide>
+            <form onSubmit={(e) => { e.preventDefault(); runQuote(); }} className="form">
+              <input value={quoteForm.input_mint} onChange={(e) => setQuoteForm({ ...quoteForm, input_mint: e.target.value })} placeholder="input mint" />
+              <input value={quoteForm.output_mint} onChange={(e) => setQuoteForm({ ...quoteForm, output_mint: e.target.value })} placeholder="output mint" />
+              <input value={quoteForm.in_amount} onChange={(e) => setQuoteForm({ ...quoteForm, in_amount: e.target.value })} placeholder="in amount" />
+              <input value={String(quoteForm.slippage_bps)} onChange={(e) => setQuoteForm({ ...quoteForm, slippage_bps: Number(e.target.value || 0) })} placeholder="slippage bps" />
+              <button type="submit">Get Quote</button>
+            </form>
+            <pre>{pretty(quoteOut || {})}</pre>
           </Card>
         </section>
       );

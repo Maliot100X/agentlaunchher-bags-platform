@@ -53,6 +53,21 @@ class LaunchIn(BaseModel):
     description: str = ""
 
 
+class BagsAgentInitIn(BaseModel):
+    agent_username: str
+
+
+class BagsAgentCompleteIn(BaseModel):
+    payload: Dict[str, Any]
+
+
+class TradeQuoteIn(BaseModel):
+    input_mint: str
+    output_mint: str
+    in_amount: str
+    slippage_bps: int = 100
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     bags = BagsClient()
@@ -287,6 +302,38 @@ async def launch_preview(payload: LaunchIn):
             "Sign and submit transaction",
         ],
     }
+
+
+@app.post("/bags/agent/auth/init")
+async def bags_agent_auth_init(payload: BagsAgentInitIn):
+    try:
+        out = await app.state.bags.agent_auth_init(payload.agent_username)
+        return out
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Bags agent auth init failed: {e}")
+
+
+@app.post("/bags/agent/auth/complete")
+async def bags_agent_auth_complete(payload: BagsAgentCompleteIn):
+    try:
+        out = await app.state.bags.agent_auth_complete(payload.payload)
+        return out
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Bags agent auth complete failed: {e}")
+
+
+@app.post("/bags/trade/quote")
+async def bags_trade_quote(payload: TradeQuoteIn):
+    try:
+        out = await app.state.bags.trade_quote(
+            input_mint=payload.input_mint,
+            output_mint=payload.output_mint,
+            in_amount=payload.in_amount,
+            slippage_bps=payload.slippage_bps,
+        )
+        return out
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Bags quote failed: {e}")
 
 
 @app.post("/ask")
