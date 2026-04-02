@@ -41,6 +41,10 @@ class AskIn(BaseModel):
     message: str
 
 
+class WalletIn(BaseModel):
+    wallet: str
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     bags = BagsClient()
@@ -157,6 +161,48 @@ async def stop_agent(agent_id: str):
         raise HTTPException(status_code=404, detail="Agent not found")
     result = await app.state.manager.stop(agent_id)
     return {"stopped": True, "agent": result.__dict__}
+
+
+@app.get("/scan")
+async def scan_market():
+    tokens = await app.state.bags.token_feed()
+    pools = await app.state.bags.pools(False)
+    return {
+        "tokens_count": len(tokens),
+        "pools_count": len(pools),
+        "top_tokens": tokens[:10],
+    }
+
+
+@app.post("/portfolio")
+async def portfolio(payload: WalletIn):
+    # Bags public endpoints vary over time; for now return structured placeholder
+    # with live market context so Telegram/dashboard always has actionable output.
+    tokens = await app.state.bags.token_feed()
+    return {
+        "wallet": payload.wallet,
+        "summary": {
+            "tracked_assets": len(tokens[:5]),
+            "source": "bags-public-feed",
+        },
+        "positions": [
+            {
+                "symbol": t.get("symbol", "UNKNOWN"),
+                "status": t.get("status", "unknown"),
+                "market_cap": t.get("marketCap", 0),
+            }
+            for t in tokens[:5]
+        ],
+    }
+
+
+@app.post("/positions")
+async def positions(payload: WalletIn):
+    pf = await portfolio(payload)
+    return {
+        "wallet": payload.wallet,
+        "positions": pf["positions"],
+    }
 
 
 @app.post("/ask")

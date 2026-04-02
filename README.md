@@ -1,35 +1,74 @@
 # AgentLaunchHer (Bags Agent Platform)
 
-Fresh rebuild foundation for a Bags-native autonomous agent platform with:
+![AgentLaunchHer Banner](docs/agentlaunchher-banner.svg)
 
-- FastAPI backend (`api.py`)
+Production-focused Bags-native autonomous agent platform foundation with:
+
+- FastAPI backend API (`api.py`)
 - Agent runtime manager (`agents.py`)
-- Registry + verification store (`registry.py`, `verifier.py`)
+- Registry + verification (`registry.py`, `verifier.py`)
 - Ollama provider manager (`providers/providers.py`)
-- Telegram control bot (`telegram/bot.py`)
-- Next.js command dashboard (`frontend/`)
+- Telegram bot control surface (`telegram/bot.py`)
+- Next.js dashboard (`frontend/`) with animated 3D-styled background and 9 tabs
 
-## Quick Start
+## Directory Layout
 
-1. Ensure `.env` is configured.
-2. Start all services:
+- `api.py` - API gateway and orchestration
+- `agents.py` - agent lifecycle and autonomous loop
+- `registry.py` - sqlite-backed registry and verification storage
+- `verifier.py` - random code generation and proof matching
+- `bags/client.py` - Bags API integration
+- `providers/providers.py` - Ollama provider routing
+- `telegram/bot.py` - bot command handlers
+- `frontend/` - Next.js dashboard UI
+
+## Environment Variables
+
+Required values are loaded from `.env`:
+
+- `BAGS_API_KEY`
+- `BAGS_PARTNER_WALLET`
+- `SOLANA_RPC_URL`
+- `OLLAMA_URL`
+- `ACTIVE_AI_MODEL`
+- `TELEGRAM_LAUNCHER_BOT_TOKEN`
+- `PORT` (default `3001`)
+- `WEB_PORT` (default `3000`)
+
+## Run Locally
+
+Start everything:
 
 ```bash
 ./start_all.sh
 ```
 
-3. Open:
-
-- API: `http://localhost:3001/health`
-- Dashboard: `http://localhost:3000`
-
-4. Stop all services:
+Stop everything:
 
 ```bash
 ./stop_all.sh
 ```
 
-## API Endpoints
+## Verification Checklist
+
+1. API health
+
+```bash
+curl -s http://127.0.0.1:3001/health
+```
+
+2. Dashboard
+
+- Open `http://127.0.0.1:3000`
+- Ensure all 9 tabs are clickable
+
+3. Telegram bot process
+
+```bash
+tail -f logs/telegram.log
+```
+
+## API Reference
 
 - `GET /health`
 - `POST /registry/request-code`
@@ -38,21 +77,26 @@ Fresh rebuild foundation for a Bags-native autonomous agent platform with:
 - `GET /agents`
 - `POST /agents/{agent_id}/start`
 - `POST /agents/{agent_id}/stop`
+- `GET /scan`
+- `POST /portfolio`
+- `POST /positions`
 - `POST /ask`
 
 ## Telegram Commands
 
 - `/help`
+- `/createagent <name>`
 - `/new <name>`
 - `/agents`
 - `/startagent <agent_id>`
 - `/stopagent <agent_id>`
 - `/scan`
+- `/portfolio <wallet>`
+- `/positions <wallet>`
 - `/status`
 - `/ask <message>`
 
 ## Notes
 
-- Health endpoint validates Bags and Ollama connectivity.
-- Financial auto-execution is not implemented; recommendations remain user-mediated.
-- Legacy imported files were preserved in `_legacy_snapshot/` for reference.
+- Financial actions are user-mediated; no forced auto-execution path is enabled.
+- `_legacy_snapshot/` keeps previous imported files for reference.

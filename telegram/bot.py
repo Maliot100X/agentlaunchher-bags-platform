@@ -29,11 +29,13 @@ async def _api_post(path: str, payload: dict):
 
 async def cmd_help(update: Update, context: ContextTypes.DEFAULT_TYPE):
     text = (
-        "/new <name> - register a new agent\n"
+        "/createagent <name> - register a new agent\n"
         "/agents - list agents\n"
         "/startagent <agent_id>\n"
         "/stopagent <agent_id>\n"
         "/scan - quick market feed check\n"
+        "/portfolio <wallet>\n"
+        "/positions <wallet>\n"
         "/status - service health\n"
         "/ask <question> - ask ollama assistant\n"
     )
@@ -89,8 +91,28 @@ async def cmd_status(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 async def cmd_scan(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    data = await _api_get("/health")
-    await update.message.reply_text(f"Scan gateway status: {data['status']}")
+    data = await _api_get("/scan")
+    await update.message.reply_text(
+        f"Tokens: {data.get('tokens_count', 0)} | Pools: {data.get('pools_count', 0)}"
+    )
+
+
+async def cmd_portfolio(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if not context.args:
+        await update.message.reply_text("Usage: /portfolio <wallet>")
+        return
+    wallet = context.args[0]
+    data = await _api_post("/portfolio", {"wallet": wallet})
+    await update.message.reply_text(str(data))
+
+
+async def cmd_positions(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if not context.args:
+        await update.message.reply_text("Usage: /positions <wallet>")
+        return
+    wallet = context.args[0]
+    data = await _api_post("/positions", {"wallet": wallet})
+    await update.message.reply_text(str(data))
 
 
 async def cmd_ask(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -108,12 +130,15 @@ def run() -> None:
 
     app = Application.builder().token(BOT_TOKEN).build()
     app.add_handler(CommandHandler("help", cmd_help))
+    app.add_handler(CommandHandler("createagent", cmd_new))
     app.add_handler(CommandHandler("new", cmd_new))
     app.add_handler(CommandHandler("agents", cmd_agents))
     app.add_handler(CommandHandler("startagent", cmd_startagent))
     app.add_handler(CommandHandler("stopagent", cmd_stopagent))
     app.add_handler(CommandHandler("status", cmd_status))
     app.add_handler(CommandHandler("scan", cmd_scan))
+    app.add_handler(CommandHandler("portfolio", cmd_portfolio))
+    app.add_handler(CommandHandler("positions", cmd_positions))
     app.add_handler(CommandHandler("ask", cmd_ask))
     app.run_polling(drop_pending_updates=True)
 
