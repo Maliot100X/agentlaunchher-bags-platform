@@ -31,8 +31,14 @@ class PendingVerification:
 
 class RegistryStore:
     def __init__(self) -> None:
-        DB_PATH.parent.mkdir(parents=True, exist_ok=True)
-        self.conn = sqlite3.connect(DB_PATH)
+        db_path = DB_PATH
+        try:
+            db_path.parent.mkdir(parents=True, exist_ok=True)
+        except OSError:
+            # Serverless platforms may mount project root as read-only.
+            db_path = Path("/tmp/registry.db")
+            db_path.parent.mkdir(parents=True, exist_ok=True)
+        self.conn = sqlite3.connect(db_path)
         self.conn.row_factory = sqlite3.Row
         self._migrate()
 
