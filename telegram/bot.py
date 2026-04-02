@@ -96,8 +96,10 @@ async def cmd_status(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def cmd_scan(update: Update, context: ContextTypes.DEFAULT_TYPE):
     data = await _api_get("/scan")
+    coins = data.get("coins", [])[:5]
+    preview = ", ".join([c.get("symbol", "UNK") for c in coins]) if coins else "n/a"
     await update.message.reply_text(
-        f"Tokens: {data.get('tokens_count', 0)} | Pools: {data.get('pools_count', 0)}"
+        f"Tokens: {data.get('tokens_count', 0)} | Pools: {data.get('pools_count', 0)} | Top: {preview}"
     )
 
 

@@ -174,10 +174,20 @@ async def stop_agent(agent_id: str):
 async def scan_market():
     tokens = await app.state.bags.token_feed()
     pools = await app.state.bags.pools(False)
+    top = tokens[:10]
     return {
         "tokens_count": len(tokens),
         "pools_count": len(pools),
-        "top_tokens": tokens[:10],
+        "coins": [
+            {
+                "symbol": t.get("symbol", "UNKNOWN"),
+                "name": t.get("name", "Unknown"),
+                "status": t.get("status", "unknown"),
+                "market_cap": t.get("marketCap", 0),
+            }
+            for t in top
+        ],
+        "top_tokens": top,
     }
 
 
