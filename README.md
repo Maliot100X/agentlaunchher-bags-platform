@@ -49,6 +49,21 @@ Stop everything:
 ./stop_all.sh
 ```
 
+## Persistent Runtime (Recommended)
+
+Use tmux-based launcher for long-running operation:
+
+```bash
+./start_tmux.sh
+tmux attach -t agentlaunchher
+```
+
+Stop tmux session:
+
+```bash
+./stop_tmux.sh
+```
+
 ## Verification Checklist
 
 1. API health

@@ -217,4 +217,4 @@ async def ask(payload: AskIn):
 if __name__ == "__main__":
     import uvicorn
 
-    uvicorn.run("api:app", host="0.0.0.0", port=int(os.getenv("PORT", "3001")), reload=True)
+    uvicorn.run("api:app", host="0.0.0.0", port=int(os.getenv("PORT", "3001")), reload=False)
