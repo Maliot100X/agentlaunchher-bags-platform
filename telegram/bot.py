@@ -34,6 +34,10 @@ async def cmd_help(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "/startagent <agent_id>\n"
         "/stopagent <agent_id>\n"
         "/scan - quick market feed check\n"
+        "/launch <name> <symbol> <wallet>\n"
+        "/skills - list available skills\n"
+        "/walletscan <wallet>\n"
+        "/token <symbol>\n"
         "/portfolio <wallet>\n"
         "/positions <wallet>\n"
         "/status - service health\n"
@@ -115,6 +119,53 @@ async def cmd_positions(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(str(data))
 
 
+async def cmd_skills(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    data = await _api_get("/skills")
+    skills = data.get("skills", [])
+    if not skills:
+        await update.message.reply_text("No skills available.")
+        return
+    text = "\n".join([f"- {s['id']}" for s in skills[:30]])
+    await update.message.reply_text(text)
+
+
+async def cmd_walletscan(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if not context.args:
+        await update.message.reply_text("Usage: /walletscan <wallet>")
+        return
+    wallet = context.args[0]
+    data = await _api_post("/wallet/scan", {"wallet": wallet})
+    await update.message.reply_text(str(data))
+
+
+async def cmd_launch(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if len(context.args) < 3:
+        await update.message.reply_text("Usage: /launch <name> <symbol> <wallet>")
+        return
+    name = context.args[0]
+    symbol = context.args[1]
+    wallet = context.args[2]
+    data = await _api_post(
+        "/launch/preview",
+        {"name": name, "symbol": symbol, "wallet": wallet, "description": "Launch requested via telegram"},
+    )
+    await update.message.reply_text(str(data))
+
+
+async def cmd_token(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if not context.args:
+        await update.message.reply_text("Usage: /token <symbol>")
+        return
+    target = context.args[0].upper()
+    scan = await _api_get("/scan")
+    rows = scan.get("top_tokens", [])
+    match = next((t for t in rows if str(t.get("symbol", "")).upper() == target), None)
+    if not match:
+        await update.message.reply_text("Token not found in current top feed.")
+        return
+    await update.message.reply_text(str(match))
+
+
 async def cmd_ask(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not context.args:
         await update.message.reply_text("Usage: /ask <message>")
@@ -137,6 +188,10 @@ def run() -> None:
     app.add_handler(CommandHandler("stopagent", cmd_stopagent))
     app.add_handler(CommandHandler("status", cmd_status))
     app.add_handler(CommandHandler("scan", cmd_scan))
+    app.add_handler(CommandHandler("launch", cmd_launch))
+    app.add_handler(CommandHandler("skills", cmd_skills))
+    app.add_handler(CommandHandler("walletscan", cmd_walletscan))
+    app.add_handler(CommandHandler("token", cmd_token))
     app.add_handler(CommandHandler("portfolio", cmd_portfolio))
     app.add_handler(CommandHandler("positions", cmd_positions))
     app.add_handler(CommandHandler("ask", cmd_ask))

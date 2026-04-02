@@ -106,6 +106,10 @@ tail -f logs/telegram.log
 - `/startagent <agent_id>`
 - `/stopagent <agent_id>`
 - `/scan`
+- `/launch <name> <symbol> <wallet>`
+- `/skills`
+- `/walletscan <wallet>`
+- `/token <symbol>`
 - `/portfolio <wallet>`
 - `/positions <wallet>`
 - `/status`

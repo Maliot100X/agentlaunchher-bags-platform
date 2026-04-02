@@ -1,0 +1,19 @@
+[
+  {"id":"skill_agent_personalization_v1","title":"Agent Personalization"},
+  {"id":"skill_sol_momentum_trader_v1","title":"SOL Momentum Trader"},
+  {"id":"skill_dex_arb_scanner_v1","title":"DEX Arb Scanner"},
+  {"id":"skill_fee_maximizer_v1","title":"Fee Maximizer"},
+  {"id":"skill_token_launch_v1","title":"Token Launch"},
+  {"id":"skill_self_funded_launch_v1","title":"Self Funded Launch"},
+  {"id":"skill_agent_services_v1","title":"Agent Services"},
+  {"id":"skill_swap_api_v1","title":"Swap API"},
+  {"id":"skill_multi_dex_arb_v1","title":"Multi DEX Arb"},
+  {"id":"skill_sniper_alerts_v1","title":"Sniper Alerts"},
+  {"id":"skill_domain_registration_v1","title":"Domain Registration"},
+  {"id":"skill_social_amplification_v1","title":"Social Amplification"},
+  {"id":"skill_trading_intelligence_v1","title":"Trading Intelligence"},
+  {"id":"skill_deploy_via_x_v1","title":"Deploy via X"},
+  {"id":"skill_said_identity_v1","title":"SAID Identity"},
+  {"id":"skill_portfolio_wallet_v1","title":"Portfolio Wallet"},
+  {"id":"skill_tokenized_agents_v1","title":"Tokenized Agents"}
+]

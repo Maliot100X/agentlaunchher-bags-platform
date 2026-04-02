@@ -45,6 +45,13 @@ class WalletIn(BaseModel):
     wallet: str
 
 
+class LaunchIn(BaseModel):
+    name: str
+    symbol: str
+    wallet: str
+    description: str = ""
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     bags = BagsClient()
@@ -202,6 +209,51 @@ async def positions(payload: WalletIn):
     return {
         "wallet": payload.wallet,
         "positions": pf["positions"],
+    }
+
+
+@app.post("/wallet/scan")
+async def wallet_scan(payload: WalletIn):
+    rpc = os.getenv("SOLANA_RPC_URL", "https://api.mainnet-beta.solana.com")
+    body = {
+        "jsonrpc": "2.0",
+        "id": 1,
+        "method": "getBalance",
+        "params": [payload.wallet],
+    }
+    async with httpx.AsyncClient(timeout=20) as c:
+        resp = await c.post(rpc, json=body)
+        resp.raise_for_status()
+        data = resp.json()
+    lamports = ((data.get("result") or {}).get("value")) or 0
+    sol = lamports / 1_000_000_000
+    return {"wallet": payload.wallet, "lamports": lamports, "sol_balance": sol}
+
+
+@app.get("/skills")
+async def list_skills():
+    try:
+        with open("skills/catalog.json", "r", encoding="utf-8") as f:
+            return {"skills": json.load(f)}
+    except FileNotFoundError:
+        return {"skills": []}
+
+
+@app.post("/launch/preview")
+async def launch_preview(payload: LaunchIn):
+    fee = float(os.getenv("BAGS_LAUNCH_FEE", "0.07"))
+    return {
+        "launch_ready": True,
+        "network": "solana-mainnet-beta",
+        "token": {"name": payload.name, "symbol": payload.symbol.upper(), "description": payload.description},
+        "wallet": payload.wallet,
+        "required_fee_sol": fee,
+        "next_steps": [
+            "Create token metadata",
+            "Create fee share configuration",
+            "Create launch transaction",
+            "Sign and submit transaction",
+        ],
     }
 
 
