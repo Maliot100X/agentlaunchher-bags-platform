@@ -46,6 +46,12 @@ async def cmd_help(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(text)
 
 
+async def cmd_start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text(
+        "AgentLaunchHer bot online.\nUse /help for all commands."
+    )
+
+
 async def cmd_new(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not context.args:
         await update.message.reply_text("Usage: /new <agent-name>")
@@ -182,6 +188,7 @@ def run() -> None:
         raise RuntimeError("TELEGRAM_LAUNCHER_BOT_TOKEN is not set")
 
     app = Application.builder().token(BOT_TOKEN).build()
+    app.add_handler(CommandHandler("start", cmd_start))
     app.add_handler(CommandHandler("help", cmd_help))
     app.add_handler(CommandHandler("createagent", cmd_new))
     app.add_handler(CommandHandler("new", cmd_new))

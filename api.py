@@ -298,6 +298,52 @@ async def ask(payload: AskIn):
     return {"answer": out}
 
 
+@app.get("/analytics/summary")
+async def analytics_summary():
+    tokens = await app.state.bags.token_feed()
+    pools = await app.state.bags.pools(False)
+    top = tokens[:20]
+    live = [t for t in top if str(t.get("status", "")).lower() in ("live", "active")]
+    avg_mc = 0
+    if top:
+        avg_mc = sum(float(t.get("marketCap", 0) or 0) for t in top) / len(top)
+    return {
+        "tokens_observed": len(tokens),
+        "pools_observed": len(pools),
+        "live_tokens_top20": len(live),
+        "avg_market_cap_top20": avg_mc,
+        "top_symbols": [t.get("symbol", "UNKNOWN") for t in top[:10]],
+    }
+
+
+@app.get("/marketplace/feed")
+async def marketplace_feed():
+    runtime = app.state.manager.list()
+    db_agents = app.state.store.list_agents()
+    entries = []
+    for a in runtime[:20]:
+        entries.append(
+            {
+                "type": "agent_status",
+                "agent_id": a.agent_id,
+                "name": a.name,
+                "status": "running" if a.running else "stopped",
+                "skills": a.skills[:6],
+            }
+        )
+    for a in db_agents[:20]:
+        entries.append(
+            {
+                "type": "agent_listing",
+                "agent_id": a.get("agent_id"),
+                "name": a.get("name"),
+                "owner": a.get("owner_handle"),
+                "skills": a.get("skills", []),
+            }
+        )
+    return {"items": entries[:30], "count": len(entries[:30])}
+
+
 if __name__ == "__main__":
     import uvicorn
 

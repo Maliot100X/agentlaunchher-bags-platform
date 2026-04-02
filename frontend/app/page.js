@@ -38,6 +38,8 @@ export default function HomePage() {
   const [scan, setScan] = useState(null);
   const [agents, setAgents] = useState([]);
   const [skills, setSkills] = useState([]);
+  const [analytics, setAnalytics] = useState(null);
+  const [marketplace, setMarketplace] = useState([]);
 
   const [verifyForm, setVerifyForm] = useState({ requester: '', code: '', twitter_url: '' });
   const [registerForm, setRegisterForm] = useState({
@@ -84,16 +86,24 @@ export default function HomePage() {
         api('/agents'),
         api('/skills'),
       ]);
+      const [an, mp] = await Promise.all([
+        api('/analytics/summary').catch(() => null),
+        api('/marketplace/feed').catch(() => ({ items: [] })),
+      ]);
       setHealth(h);
       setScan(s);
       setAgents(a.runtime_agents || []);
       setSkills(sk.skills || []);
+      setAnalytics(an);
+      setMarketplace(mp.items || []);
       setNotice('Connected and synced.');
     } catch (err) {
       setHealth({ status: 'offline' });
       setScan({ coins: [] });
       setAgents([]);
       setSkills([]);
+      setAnalytics(null);
+      setMarketplace([]);
       setNotice(`API offline: ${err.message}`);
     } finally {
       setBusy(false);
@@ -376,7 +386,7 @@ export default function HomePage() {
       );
     }
 
-    if (active === 'Signals' || active === 'Analytics' || active === 'Marketplace') {
+    if (active === 'Signals') {
       return (
         <section className="grid">
           <Card title="Signal Feed" wide>
@@ -403,6 +413,40 @@ export default function HomePage() {
           </Card>
           <Card title="Feed Stats">
             <pre>{pretty({ tokens_count: scan?.tokens_count || 0, pools_count: scan?.pools_count || 0 })}</pre>
+          </Card>
+        </section>
+      );
+    }
+
+    if (active === 'Analytics') {
+      return (
+        <section className="grid">
+          <Card title="Analytics Summary" wide>
+            <pre>{pretty(analytics || { status: 'No analytics yet' })}</pre>
+          </Card>
+          <Card title="Market Surface">
+            <pre>{pretty({ top_symbols: analytics?.top_symbols || [], live_tokens_top20: analytics?.live_tokens_top20 || 0 })}</pre>
+          </Card>
+        </section>
+      );
+    }
+
+    if (active === 'Marketplace') {
+      return (
+        <section className="grid">
+          <Card title="Marketplace Feed" wide>
+            <div className="list tall">
+              {(marketplace.length ? marketplace : [{ type: 'empty', name: 'No marketplace items yet' }]).map((item, i) => (
+                <div key={i} className="row">
+                  <b>{item.name || item.agent_id || 'Item'}</b>
+                  <span>Type: {item.type || 'unknown'}</span>
+                  <span>Status: {item.status || 'n/a'}</span>
+                </div>
+              ))}
+            </div>
+          </Card>
+          <Card title="Marketplace Stats">
+            <pre>{pretty({ items: marketplace.length })}</pre>
           </Card>
         </section>
       );
