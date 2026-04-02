@@ -10,6 +10,7 @@ from typing import Any, Dict, List, Optional
 import httpx
 from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException, Response
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
 from agents import AgentManager, ManagedAgent
@@ -70,6 +71,13 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(title="AgentLaunchHer API", version="0.1.0", lifespan=lifespan)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 
 @app.get("/")
